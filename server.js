@@ -1,3 +1,5 @@
+import logger from './logger.js';
+import morgan from 'morgan';
 import ('dotenv/config');
 // require('dotenv').config();
 import express from 'express';
@@ -5,6 +7,9 @@ import express from 'express';
 const app = express();
 app.use(express.json()); 
 const PORT = process.env.PORT || 4000;
+
+const morganFormat = ":method :url :status :response-time ms";
+
 
 // app.get("/", (req , res) => {
 //     res.end(`Hello from one sided lover Aryan Singh`);
@@ -52,6 +57,7 @@ app.get('/teas/:id', (req ,res) => {
 // Update tea
 
 app.put('/teas/:id', (req ,res) => {
+  logger.warn("A post request is made to add new tea");  
     const tea = teaData.find(t => t.id === parseInt(req.params.id));
 
    if(!tea) {
@@ -74,6 +80,22 @@ app.delete('/teas/:id', (req ,res) => {
      teaData.splice(index, 1);
      return res.status(204).send('deleted')   
 })
+
+app.use(
+    morgan(morganFormat, {
+      stream: {
+        write: (message) => {
+          const logObject = {
+            method: message.split(" ")[0],
+            url: message.split(" ")[1],
+            status: message.split(" ")[2],
+            responseTime: message.split(" ")[3],
+          };
+          logger.info(JSON.stringify(logObject));
+        },
+      },
+    })
+  );
 
 app.listen(PORT , () => {
     console.log(`The server is listening at port: ${PORT}`);
